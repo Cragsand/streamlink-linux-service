@@ -22,6 +22,12 @@ sudo apt update
 sudo apt install ffmpeg
 ```
 
+# Run manually to record directly
+```
+source venv/bin/activate
+python record-twitch roflgator
+```
+
 # Configure settings.config and get your token and create a client ID for your "app"
 You have to create a client id from https://dev.twitch.tv/console/apps
 Get your token from inspecting cookies in your browser on Twitch. This is required and requires an active subscription to that channel if you want to record during ad breaks.
@@ -37,8 +43,8 @@ CurlHeaders=/home/crag/streamlink/config/chrome110.header
 YtDlpArgs=--add-header "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 ```
 
-# Linux service example for recording murdercrumpet:
-Replace crag with your username
+# Linux service config example for recording murdercrumpet:
+Replace crag with your username. I'm using absolute paths here so adjust to yours.
 
 sudo nano /etc/systemd/system/record-murdercrumpet.service
 
@@ -63,7 +69,7 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 # Linux service example for recording roflgator:
-Replace crag with your username
+Replace crag with your username and adjust paths.
 
 sudo nano /etc/systemd/system/record-roflgator.service
 	
@@ -88,6 +94,7 @@ WantedBy=multi-user.target
 ```
 
 # Service example for recording for recording kick.com/roflgator 
+Replace crag with your username and adjust paths.
 
 sudo nano /etc/systemd/system/kick-roflgator.service
 ```
@@ -114,6 +121,7 @@ WantedBy=multi-user.target
 ```
 
 # Service for kick murdercrumpet 
+Replace crag with your username and adjust paths.
 
 sudo nano /etc/systemd/system/kick-murdercrumpet.service
 ```
@@ -138,8 +146,8 @@ UMask=0022
 [Install]
 WantedBy=multi-user.target
 ```
-# Give permission to read and write in path 
-Replace crag with your username
+# Give permission to read and write
+Replace crag with your username and adjust paths.
 
 ```sudo chown -R crag:crag /home/crag/streamlink/logs```
 
