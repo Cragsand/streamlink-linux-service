@@ -57,7 +57,7 @@ After=network.target
 User=crag
 Group=crag
 WorkingDirectory=/home/crag/streamlink
-ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/record.py murdercrumpet
+ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/twitch-record.py murdercrumpet
 Environment="PATH=/home/crag/streamlink/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Restart=always
 RestartSec=10
@@ -81,7 +81,7 @@ After=network.target
 User=crag
 Group=crag
 WorkingDirectory=/home/crag/streamlink
-ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/record.py roflgator
+ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/twitch-record.py roflgator
 Environment="PATH=/home/crag/streamlink/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Restart=always
 RestartSec=10
