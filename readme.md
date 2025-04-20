@@ -27,8 +27,8 @@ You have to create a client id from https://dev.twitch.tv/console/apps
 Get your token from inspecting cookies in your browser on Twitch. This is required and requires an active subscription to that channel if you want to record during ad breaks.
 ```
 [Settings]
-TwitchToken=GET_YOUR_TOKEN
-ClientID=CREATE_YOUR_CLIENT_ID_FROM 
+TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
+ClientID=CREATE_YOUR_CLIENT_ID_FROM_TWITCH_DEVELOPER_CONSOLE
 RetryTime=30
 RetryTimeKick = 120
 ExtraArgs=--twitch-disable-ads
@@ -39,6 +39,7 @@ YtDlpArgs=--add-header "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) App
 
 # Linux service example for recording murdercrumpet:
 Replace crag with your username
+
 sudo nano /etc/systemd/system/record-murdercrumpet.service
 
 ```
@@ -63,6 +64,7 @@ WantedBy=multi-user.target
 ```
 # Linux service example for recording roflgator:
 Replace crag with your username
+
 sudo nano /etc/systemd/system/record-roflgator.service
 	
 ```[Unit]
@@ -86,6 +88,7 @@ WantedBy=multi-user.target
 ```
 
 # Service example for recording for recording kick.com/roflgator 
+
 sudo nano /etc/systemd/system/kick-roflgator.service
 ```
 [Unit]
@@ -111,6 +114,7 @@ WantedBy=multi-user.target
 ```
 
 # Service for kick murdercrumpet 
+
 sudo nano /etc/systemd/system/kick-murdercrumpet.service
 ```
 [Unit]
@@ -147,14 +151,14 @@ sudo chmod 644 /home/crag/streamlink/logs/kick_roflgator.log
 sudo chown -R crag:crag /home/crag/streamlink/logs
 sudo chmod -R 755 /home/crag/streamlink/logs
 ```
-# Reload and restart the services commands:
+# Reload and restart the services in linux commands example:
 ```
 sudo systemctl daemon-reload
 sudo systemctl restart record-roflgator
 sudo systemctl start record-roflgator
 ```
 
-# Disable/Enable autostart commands:
+# Disable/Enable autostart commands example:
 ```
 sudo systemctl disable record-roflgator
 sudo systemctl enable record-roflgator
