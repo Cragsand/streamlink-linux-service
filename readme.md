@@ -7,11 +7,11 @@ Not everything is explained so you have to lookup some things.
 cd ~/streamlink
 python3 -m venv venv
 ```
-# Activate environment
+Activate environment
 ```
 source venv/bin/activate
 ```
-# Download new environment libraries
+Download new environment libraries
 ```
 pip install -r requirements.txt
 ```
@@ -31,6 +31,7 @@ python record-twitch roflgator
 # Configure settings.config and get your token and create a client ID for your "app"
 You have to create a client id from https://dev.twitch.tv/console/apps
 Get your token from inspecting cookies in your browser on Twitch. This is required and requires an active subscription to that channel if you want to record during ad breaks.
+
 ```
 [Settings]
 TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
@@ -46,7 +47,7 @@ YtDlpArgs=--add-header "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) App
 # Linux service config example for recording murdercrumpet:
 Replace crag with your username. I'm using absolute paths here so adjust to yours.
 
-sudo nano /etc/systemd/system/record-murdercrumpet.service
+```sudo nano /etc/systemd/system/record-murdercrumpet.service```
 
 ```
 [Unit]
@@ -71,7 +72,7 @@ WantedBy=multi-user.target
 # Linux service example for recording roflgator:
 Replace crag with your username and adjust paths.
 
-sudo nano /etc/systemd/system/record-roflgator.service
+```sudo nano /etc/systemd/system/record-roflgator.service```
 	
 ```[Unit]
 Description=Streamlink Recorder for roflgator
@@ -96,7 +97,7 @@ WantedBy=multi-user.target
 # Service example for recording for recording kick.com/roflgator 
 Replace crag with your username and adjust paths.
 
-sudo nano /etc/systemd/system/kick-roflgator.service
+```sudo nano /etc/systemd/system/kick-roflgator.service```
 ```
 [Unit]
 Description=Kick Recorder for roflgator 
