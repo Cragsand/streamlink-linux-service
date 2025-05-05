@@ -99,7 +99,7 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 
-**Recording https://kick.com/roflgator **
+**Recording https://kick.com/roflgator**
 
 Replace crag with your username and adjust paths.
 
@@ -127,7 +127,7 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 
-**Recording  https://kick.com/murdercrumpet **
+**Recording  https://kick.com/murdercrumpet**
 
 Replace crag with your username and adjust paths.
 
@@ -154,8 +154,10 @@ UMask=0022
 [Install]
 WantedBy=multi-user.target
 ```
-# Give permission to read and write
-Replace crag with your username and adjust paths.
+
+# Give permission to read and write in Linux
+
+Replace crag with your username and adjust paths to match yours.
 
 ```sudo chown -R crag:crag /home/crag/streamlink/logs```
 
@@ -167,6 +169,7 @@ sudo chmod 644 /home/crag/streamlink/logs/kick_roflgator.log
 sudo chown -R crag:crag /home/crag/streamlink/logs
 sudo chmod -R 755 /home/crag/streamlink/logs
 ```
+
 **Reload and restart the services in linux commands example:**
 ```
 sudo systemctl daemon-reload
