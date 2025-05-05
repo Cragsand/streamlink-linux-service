@@ -44,7 +44,10 @@ CurlHeaders=/home/crag/streamlink/config/chrome110.header
 YtDlpArgs=--add-header "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 ```
 
-# Linux service config example for recording murdercrumpet:
+# Linux service config examples
+
+**For recording https://twitch.tv/murdercrumpet**
+
 Replace crag with your username. I'm using absolute paths here so adjust to yours.
 
 ```sudo nano /etc/systemd/system/record-murdercrumpet.service```
@@ -69,7 +72,9 @@ UMask=0022
 [Install]
 WantedBy=multi-user.target
 ```
-# Linux service example for recording roflgator:
+
+**Recording https://twitch.tv/roflgator**
+
 Replace crag with your username and adjust paths.
 
 ```sudo nano /etc/systemd/system/record-roflgator.service```
@@ -94,7 +99,8 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 
-# Service example for recording for recording kick.com/roflgator 
+**Recording https://kick.com/roflgator **
+
 Replace crag with your username and adjust paths.
 
 ```sudo nano /etc/systemd/system/kick-roflgator.service```
@@ -121,10 +127,11 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 
-# Service for kick murdercrumpet 
+**Recording  https://kick.com/murdercrumpet **
+
 Replace crag with your username and adjust paths.
 
-sudo nano /etc/systemd/system/kick-murdercrumpet.service
+```sudo nano /etc/systemd/system/kick-murdercrumpet.service```
 ```
 [Unit]
 Description=Kick Recorder for murdercrumpet
@@ -152,7 +159,7 @@ Replace crag with your username and adjust paths.
 
 ```sudo chown -R crag:crag /home/crag/streamlink/logs```
 
-# These might also be needed
+**These might also be needed**
 Replace crag with your username
 ```
 sudo chown crag:crag /home/crag/streamlink/logs/kick_roflgator.log
@@ -160,14 +167,14 @@ sudo chmod 644 /home/crag/streamlink/logs/kick_roflgator.log
 sudo chown -R crag:crag /home/crag/streamlink/logs
 sudo chmod -R 755 /home/crag/streamlink/logs
 ```
-# Reload and restart the services in linux commands example:
+**Reload and restart the services in linux commands example:**
 ```
 sudo systemctl daemon-reload
 sudo systemctl restart record-roflgator
 sudo systemctl start record-roflgator
 ```
 
-# Disable/Enable autostart commands example:
+**Disable/Enable autostart commands example:**
 ```
 sudo systemctl disable record-roflgator
 sudo systemctl enable record-roflgator
