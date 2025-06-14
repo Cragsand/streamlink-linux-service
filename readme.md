@@ -2,8 +2,10 @@
 This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams.
 Not everything is explained so you have to lookup some things.
 
-# Create python environment
+# Install python if you don't have it and create an environment
 ```
+sudo apt update && sudo apt upgrade
+sudo apt install python3.12 python3.12-venv python3.12-dev
 cd ~/streamlink
 python3 -m venv venv
 ```
