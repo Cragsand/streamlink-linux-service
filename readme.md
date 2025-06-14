@@ -157,6 +157,20 @@ UMask=0022
 WantedBy=multi-user.target
 ```
 
+Reload and enable services:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable record-roflgator.service
+sudo systemctl start  record-roflgator.service
+sudo systemctl enable record-murdercrumpet.service
+sudo systemctl start  record-murdercrumpet.service
+sudo systemctl enable record-kick-roflgator.service
+sudo systemctl start  record-kick-roflgator.service
+sudo systemctl enable record-kick-murdercrumpet.service
+sudo systemctl start  record-kick-murdercrumpet.service
+```
+
 # Give permission to read and write in Linux
 
 Replace crag with your username and adjust paths to match yours.
