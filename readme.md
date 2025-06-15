@@ -1,6 +1,7 @@
 # What is this?
-This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams.
-Not everything is explained so you have to lookup some things.
+This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
+
+Not everything is explained in this repo so you have to lookup some things yourself.
 
 # Install python if you don't have it and create an environment
 ```
