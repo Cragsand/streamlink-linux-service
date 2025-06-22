@@ -17,29 +17,36 @@ if len(sys.argv) < 2:
 streamer_name = sys.argv[1]
 
 # ─── 3. Paths (all relative to script folder) ───────────────────────────────────
-external_dir = "/media/crag/Gargantua/Videos/Twitch"
+external_dir = "/mnt/Gargantua/Videos/Twitch"
 base_dir     = SCRIPT_DIR
 log_dir      = os.path.join(base_dir, "logs")
 fallback_dir = os.path.join(base_dir, "twitch")
 config_path  = os.path.join(base_dir, "settings.config")
 
 # ─── 4. Ensure log + fallback directories exist ────────────────────────────────
-try:
-    os.makedirs(log_dir, exist_ok=True)
-    os.makedirs(fallback_dir, exist_ok=True)
-except Exception as e:
-    print(f"[ERROR] Could not create dirs under {base_dir}: {e}")
-    sys.exit(1)
+# Only fatal if fallback_dir cannot be created; log_dir errors are warnings
+for path in (fallback_dir, log_dir):
+    try:
+        os.makedirs(path, exist_ok=True)
+    except Exception as e:
+        if path == log_dir:
+            print(f"[WARNING] Cannot create log directory {path}: {e} — continuing without file logging.")
+        else:
+            print(f"[ERROR] Cannot create directory {path}: {e}")
+            sys.exit(1)
 
 # ─── 5. Logging setup ──────────────────────────────────────────────────────────
 log_file = os.path.join(log_dir, f"{streamer_name}.log")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# File handler
-fh = logging.FileHandler(log_file)
-fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logger.addHandler(fh)
+# File handler (optional)
+try:
+    fh = logging.FileHandler(log_file)
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(fh)
+except Exception as e:
+    print(f"[WARNING] Could not open log file {log_file} for writing: {e}")
 
 # Console handler
 ch = logging.StreamHandler(sys.stdout)

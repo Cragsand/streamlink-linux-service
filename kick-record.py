@@ -17,7 +17,7 @@ if len(sys.argv) < 2:
 streamer_name = sys.argv[1]
 
 # ─── 3. Paths (relative to script folder) ──────────────────────────────────────
-external_dir = "/media/crag/Gargantua/Videos/Kick"
+external_dir = "/mnt/Gargantua/Videos/Kick"
 base_dir     = SCRIPT_DIR
 kick_dir     = os.path.join(base_dir, "kick")
 log_dir      = os.path.join(base_dir, "logs")
@@ -29,20 +29,27 @@ for path in (kick_dir, log_dir):
     try:
         os.makedirs(path, exist_ok=True)
     except Exception as e:
-        print(f"[ERROR] Cannot create directory {path}: {e}")
-        sys.exit(1)
+        # Warn on log_dir failure, but exit on kick_dir failure
+        if path == log_dir:
+            print(f"[WARNING] Cannot create log directory {path}: {e} — continuing without file logging.")
+        else:
+            print(f"[ERROR] Cannot create directory {path}: {e}")
+            sys.exit(1)
 
 # ─── 5. Logging setup ──────────────────────────────────────────────────────────
 log_file = os.path.join(log_dir, f"kick_{streamer_name}.log")
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)  # capture all, handlers will filter
 
-# File handler
-fh = logging.FileHandler(log_file)
-# Use INFO level for file by default
-fh.setLevel(logging.INFO)
-fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logger.addHandler(fh)
+# File handler (optional)
+try:
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(fh)
+except Exception as e:
+    # If we can't write the log file, fall back to console-only
+    print(f"[WARNING] Could not open log file {log_file} for writing: {e}")
 
 # Console handler
 ch = logging.StreamHandler(sys.stdout)
