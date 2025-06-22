@@ -6,6 +6,7 @@ import logging
 import configparser
 import subprocess
 import re
+from logging.handlers import RotatingFileHandler
 
 # ─── 1. Compute script directory ───────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,15 +17,15 @@ if len(sys.argv) < 2:
     sys.exit(1)
 streamer_name = sys.argv[1]
 
-# ─── 3. Paths (all relative to script folder) ───────────────────────────────────
+# ─── 3. Paths ────────────────────────────────────────────────────────────────────
+# Logs now go to /tmp with rotation to limit size
+log_dir      = "/tmp/twitch-record-logs"
 external_dir = "/mnt/Gargantua/Videos/Twitch"
 base_dir     = SCRIPT_DIR
-log_dir      = os.path.join(base_dir, "logs")
 fallback_dir = os.path.join(base_dir, "twitch")
 config_path  = os.path.join(base_dir, "settings.config")
 
-# ─── 4. Ensure log + fallback directories exist ────────────────────────────────
-# Only fatal if fallback_dir cannot be created; log_dir errors are warnings
+# ─── 4. Ensure directories exist ───────────────────────────────────────────────
 for path in (fallback_dir, log_dir):
     try:
         os.makedirs(path, exist_ok=True)
@@ -36,17 +37,17 @@ for path in (fallback_dir, log_dir):
             sys.exit(1)
 
 # ─── 5. Logging setup ──────────────────────────────────────────────────────────
-log_file = os.path.join(log_dir, f"{streamer_name}.log")
+log_file = os.path.join(log_dir, f"twitch_{streamer_name}.log")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# File handler (optional)
+# Rotating file handler: max 1MB per file, 3 backups
 try:
-    fh = logging.FileHandler(log_file)
+    fh = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3)
     fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(fh)
 except Exception as e:
-    print(f"[WARNING] Could not open log file {log_file} for writing: {e}")
+    print(f"[WARNING] Could not open rotating log file {log_file}: {e}")
 
 # Console handler
 ch = logging.StreamHandler(sys.stdout)
@@ -59,7 +60,6 @@ logger.info("=== Starting twitch-record ===")
 if not os.path.isfile(config_path):
     logger.error(f"Config not found: {config_path}")
     sys.exit(1)
-
 config = configparser.ConfigParser()
 config.read(config_path)
 
@@ -113,26 +113,21 @@ def record_stream():
         ts       = get_timestamp()
         filename = f"{streamer_name}-{ts}.mp4"
 
-        # 9a. Try external if available
+        # Try external then fallback
         if use_external:
             primary = os.path.join(external_dir, filename)
             logger.info(f"→ External: {primary}")
             result, _ = run_streamlink(primary)
-            if result.returncode == 0:
-                logger.info("✓ Written external")
-            else:
-                logger.warning("✗ External failed, fallback next")
+            if result.returncode != 0:
+                logger.warning("✗ External failed, switching to fallback")
         else:
             result = None
 
-        # 9b. Fallback if needed
         if not use_external or (result and result.returncode != 0):
             fb = os.path.join(fallback_dir, filename)
             logger.info(f"→ Fallback: {fb}")
             result, _ = run_streamlink(fb)
-            if result.returncode == 0:
-                logger.info("✓ Written fallback")
-            else:
+            if result.returncode != 0:
                 logger.error("✗ Fallback failed too")
 
         logger.info(f"Sleeping {retry_time}s")

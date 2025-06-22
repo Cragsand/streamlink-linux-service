@@ -6,6 +6,7 @@ import logging
 import configparser
 import subprocess
 import re
+from logging.handlers import RotatingFileHandler
 
 # ─── 1. Compute script directory ───────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,11 +17,12 @@ if len(sys.argv) < 2:
     sys.exit(1)
 streamer_name = sys.argv[1]
 
-# ─── 3. Paths (relative to script folder) ──────────────────────────────────────
+# ─── 3. Paths ────────────────────────────────────────────────────────────────────
+# Logs now go to /tmp with rotation to limit size
+log_dir      = "/tmp/kick-record-logs"
 external_dir = "/mnt/Gargantua/Videos/Kick"
 base_dir     = SCRIPT_DIR
 kick_dir     = os.path.join(base_dir, "kick")
-log_dir      = os.path.join(base_dir, "logs")
 cookies_file = os.path.join(base_dir, "kickcomcookies.txt")
 config_path  = os.path.join(base_dir, "settings.config")
 
@@ -29,7 +31,6 @@ for path in (kick_dir, log_dir):
     try:
         os.makedirs(path, exist_ok=True)
     except Exception as e:
-        # Warn on log_dir failure, but exit on kick_dir failure
         if path == log_dir:
             print(f"[WARNING] Cannot create log directory {path}: {e} — continuing without file logging.")
         else:
@@ -39,19 +40,18 @@ for path in (kick_dir, log_dir):
 # ─── 5. Logging setup ──────────────────────────────────────────────────────────
 log_file = os.path.join(log_dir, f"kick_{streamer_name}.log")
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)  # capture all, handlers will filter
+logger.setLevel(logging.DEBUG)
 
-# File handler (optional)
+# Rotating file handler: max 1MB per file, 3 backups
 try:
-    fh = logging.FileHandler(log_file)
+    fh = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3)
     fh.setLevel(logging.INFO)
     fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(fh)
 except Exception as e:
-    # If we can't write the log file, fall back to console-only
-    print(f"[WARNING] Could not open log file {log_file} for writing: {e}")
+    print(f"[WARNING] Could not open rotating log file {log_file}: {e}")
 
-# Console handler
+# Console handler (always)
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -95,7 +95,6 @@ def get_timestamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
 def refresh_cookies():
-    """Fetch fresh cookies for Kick.com using curl."""
     logger.info("Refreshing Kick.com cookies...")
     if os.path.exists(cookies_file):
         try:
@@ -103,11 +102,7 @@ def refresh_cookies():
         except Exception:
             logger.debug("Failed to remove old cookies file; continuing.")
     cmd = f"curl --config {curl_config} --header @{curl_headers} https://kick.com/ -c {cookies_file}"
-    result = subprocess.run(
-        cmd, shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE
-    )
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     if result.returncode != 0:
         stderr = result.stderr.decode('utf-8', errors='replace')
         logger.error(f"Cookie refresh failed ({result.returncode}): {stderr.strip()}")
@@ -123,32 +118,21 @@ def record_stream():
 
         ts = get_timestamp()
         filename = f"{streamer_name}-{ts}.mp4"
+        out = os.path.join(external_dir if use_external else kick_dir, filename)
+        logger.info(f"→ {'External' if use_external else 'Fallback'}: {out}")
 
-        # Choose path
-        if use_external:
-            out = os.path.join(external_dir, filename)
-            logger.info(f"→ External: {out}")
-        else:
-            out = os.path.join(kick_dir, filename)
-            logger.info(f"→ Fallback: {out}")
-
-        # Record with yt-dlp
         cmd = f"yt-dlp {ytdlp_args} --cookies {cookies_file} {stream_url} -o \"{out}\""
         logger.debug(f"Running: {cmd}")
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
             stderr = result.stderr.decode('utf-8', errors='replace')
             logger.warning(f"yt-dlp failed ({result.returncode}): {stderr.strip()}")
-            # Fallback if external
             if use_external:
                 logger.info("Switching to fallback due to error.")
-                out = os.path.join(kick_dir, filename)
-                logger.info(f"→ Fallback: {out}")
-                cmd = f"yt-dlp {ytdlp_args} --cookies {cookies_file} {stream_url} -o \"{out}\""
-                logger.debug(f"Running: {cmd}")
-                result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if result.returncode != 0:
-                    logger.error(f"Fallback failed ({result.returncode})")
+                fallback_out = os.path.join(kick_dir, filename)
+                logger.info(f"→ Fallback: {fallback_out}")
+                fallback_cmd = cmd.replace(external_dir, kick_dir)
+                subprocess.run(fallback_cmd, shell=True)
 
         logger.info(f"Sleeping {retry_time}s...")
         time.sleep(retry_time)
