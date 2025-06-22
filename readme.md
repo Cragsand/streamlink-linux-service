@@ -68,8 +68,6 @@ ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/twitch-rec
 Environment="PATH=/home/crag/streamlink/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Restart=always
 RestartSec=10
-StandardOutput=append:/home/crag/streamlink/logs/murdercrumpet_service.log
-StandardError=append:/home/crag/streamlink/logs/murdercrumpet_service.log
 UMask=0022
 
 [Install]
@@ -94,8 +92,6 @@ ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/twitch-rec
 Environment="PATH=/home/crag/streamlink/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Restart=always
 RestartSec=10
-StandardOutput=append:/home/crag/streamlink/logs/roflgator_service.log
-StandardError=append:/home/crag/streamlink/logs/roflgator_service.log
 UMask=0022
 
 [Install]
@@ -120,8 +116,6 @@ ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/kick-recor
 
 Restart=always
 RestartSec=10 
-StandardOutput=append:/home/crag/streamlink/logs/kick_roflgator.log
-StandardError=append:/home/crag/streamlink/logs/kick_roflgator.log
 Environment=PATH=/home/crag/streamlink/venv/bin:/usr/bin:$PATH
 Environment=PYTHONPATH=/home/crag/streamlink
 UMask=0022
@@ -148,8 +142,6 @@ ExecStart=/home/crag/streamlink/venv/bin/python /home/crag/streamlink/kick-recor
 
 Restart=always
 RestartSec=10
-StandardOutput=append:/home/crag/streamlink/logs/kick_murdercrumpet.log
-StandardError=append:/home/crag/streamlink/logs/kick_murdercrumpet.log
 Environment=PATH=/home/crag/streamlink/venv/bin:/usr/bin:$PATH
 Environment=PYTHONPATH=/home/crag/streamlink
 UMask=0022
