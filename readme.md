@@ -166,17 +166,17 @@ sudo systemctl start  record-kick-murdercrumpet.service
 
 # Give permission to read and write in Linux
 
-Replace crag with your username and adjust paths to match yours.
+Replace crag with your username and adjust the paths to match yours.
 
-```sudo chown -R crag:crag /home/crag/streamlink/logs```
+```sudo chown -R crag:crag /home/crag/streamlink```
 
 **These might also be needed**
 Replace crag with your username
 ```
-sudo chown crag:crag /home/crag/streamlink/logs/kick_roflgator.log
-sudo chmod 644 /home/crag/streamlink/logs/kick_roflgator.log
-sudo chown -R crag:crag /home/crag/streamlink/logs
-sudo chmod -R 755 /home/crag/streamlink/logs
+sudo chown crag:crag /home/crag/streamlink/
+sudo chmod 644 /home/crag/streamlink/
+sudo chown -R crag:crag /home/crag/streamlink
+sudo chmod -R 755 /home/crag/streamlink
 ```
 
 **Reload and restart the services in linux commands example:**
