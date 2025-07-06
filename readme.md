@@ -30,6 +30,7 @@ sudo apt install ffmpeg
 # Run manually to record directly
 ```
 source venv/bin/activate
+chmod +x record-twitch.py
 python record-twitch roflgator
 ```
 
