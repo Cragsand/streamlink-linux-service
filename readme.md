@@ -167,11 +167,15 @@ sudo systemctl enable record-kick-murdercrumpet.service
 sudo systemctl start  record-kick-murdercrumpet.service
 ```
 
-# Give permission to read and write in Linux
+# Give permission to read and write and execute in Linux
 
 Replace crag with your username and adjust the paths to match yours.
 
-```sudo chown -R crag:crag /home/crag/streamlink```
+```
+sudo chown -R crag:crag /home/crag/streamlink
+sudo chmod +x /home/crag/streamlink/kick-record.py
+sudo chmod +x /home/crag/streamlink/twitch-record.py
+```
 
 **These might also be needed**
 Replace crag with your username
