@@ -1,5 +1,5 @@
 # What is this?
-This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
+This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails, it will instead save to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
 
 Since streamlink tends to get flagged by Kicks bot prevention system the current method in this repo uses yt-dlp and curl-impersonate to record Kick streams.
 
