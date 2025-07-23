@@ -20,7 +20,7 @@ streamer_name = sys.argv[1]
 # ─── 3. Paths ────────────────────────────────────────────────────────────────────
 # Logs now go to /tmp with rotation to limit size
 log_dir      = "/tmp/twitch-record-logs"
-external_dir = "/mnt/Gargantua/Videos/Twitch"
+external_dir = "/mnt/DAS/Videos/Twitch"
 base_dir     = SCRIPT_DIR
 fallback_dir = os.path.join(base_dir, "twitch")
 config_path  = os.path.join(base_dir, "settings.config")
@@ -81,15 +81,13 @@ logger.info(f"Stream URL: {stream_url}")
 external_parent = os.path.dirname(external_dir)
 use_external = False
 
-if os.path.isdir(external_parent) and os.access(external_parent, os.W_OK):
-    try:
-        os.makedirs(external_dir, exist_ok=True)
-        use_external = True
-        logger.info(f"External storage OK: {external_dir}")
-    except PermissionError:
-        logger.warning(f"External exists but not writable: {external_parent}")
-else:
-    logger.info(f"External not present or unwritable: {external_parent}")
+try:
+    os.makedirs(external_dir, exist_ok=True)
+    use_external = True
+    logger.info(f"External storage OK: {external_dir}")
+except Exception as e:
+    logger.warning(f"Unable to use external storage, falling back: {e}")
+    
 
 # ─── 8. Helpers ─────────────────────────────────────────────────────────────────
 def get_timestamp():
