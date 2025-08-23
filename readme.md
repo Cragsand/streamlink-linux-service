@@ -41,8 +41,15 @@ python record-twitch roflgator
 ```
 
 # Configure settings.config and get your token and create a client ID for your "app"
-You have to create a client id from https://dev.twitch.tv/console/apps
-Get your token from inspecting cookies in your browser on Twitch. This is required and requires an active subscription to that channel if you want to record during ad breaks.
+1. You have to create a client id from https://dev.twitch.tv/console/apps
+
+2. Get your login token from inspecting cookies in your browser on Twitch. Copy this and put it into TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
+
+On Firefox right click anywhere while on Twitch and select Inspect. Go to the Storage tab, expand Cookies and it should say auth-token. 
+
+This is required and requires an active subscription to the channel you are recording or Twitch Turbo if you want to record streams without ad breaks getting embedded into the video.
+
+**Security notice!** Do not ever share your TwitchToken anywhere, it allows anyone who has it to login to your account. Keep in mind that it expires after 30 days unless you keep refreshing it. Resetting your password will also expire it.
 
 ```
 [Settings]
@@ -210,6 +217,7 @@ sudo systemctl enable record-roflgator
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
 
 I'm not that experienced with linux and how linux services work so my approaches may not be optimal... I am also a newbie to git. Made this repo public so I can share it easier.
+
 
 
 
