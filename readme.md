@@ -1,5 +1,5 @@
 # What is this?
-This repo contains scripts for running streamlink as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails, it will instead save to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
+This repo contains scripts for running streamlink and yt-dlp as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails, it will instead save to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
 
 Since streamlink tends to get flagged by Kicks bot prevention system the current method in this repo uses yt-dlp and curl-impersonate to record Kick streams.
 
@@ -203,3 +203,4 @@ sudo systemctl enable record-roflgator
 # Known issues
 
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
+
