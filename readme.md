@@ -6,7 +6,7 @@ Since streamlink tends to get flagged by Kicks bot prevention system the current
 Not everything is explained in this repo so you will have to lookup some things yourself. 
 - In this example we install the script in your user home directory **/home/crag/streamlink** and set up a python environment in **/home/crag/streamlink/venv** and for the user **crag**.
 - Replace paths and username accordingly when installing and configuring this for yourself.
-- In this example we set it up to record the streamers [Roflgator](https://www.twitch.tv/roflgator) and [MurderCrumpet](https://www.twitch.tv/murdercrumpet). Adjust their references to record other streamers.
+- In this example we set it up to record the streamers on Twitch [Roflgator](https://www.twitch.tv/roflgator) and [MurderCrumpet](https://www.twitch.tv/murdercrumpet) and their Kick equivalents [Roflgator](https://www.kick.com/roflgator) and [MurderCrumpet](https://www.kick.com/murdercrumpet). Adjust their references to record other streamers.
 - Paths are configured in the py scripts themselves. TODO: Move this to the settings.config file.
 - You have to set up an [APP with the Twitch API](https://dev.twitch.tv/console/apps) and use your own account token for this to not record ads. Twitch embeds ads into the stream so this is the only way to avoid this happening.
 
@@ -210,6 +210,7 @@ sudo systemctl enable record-roflgator
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
 
 I'm not that experienced with linux and how linux services work so my approaches may not be optimal... I am also a newbie to git. Made this repo public so I can share it easier.
+
 
 
 
