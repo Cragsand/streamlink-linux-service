@@ -1,9 +1,12 @@
 # What is this?
-This repo contains scripts for running streamlink and yt-dlp as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to an external directory you can specify, then if that fails, it will instead save to a fallback directory. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
+This repo contains scripts for running **[streamlink](https://github.com/streamlink/streamlink)** and **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** as a service in linux to actively monitor and record Twitch and Kick streams. It primarily attempts to record to a **main directory** you can specify, then if that fails, it will instead save to a **fallback directory**. This is useful if you have an external harddrive or mounted network drive, but the connection to it breaks for some reason. That way it ensures you don't lose a recording due to slow or faulty hardware. 
 
 Since streamlink tends to get flagged by Kicks bot prevention system the current method in this repo uses yt-dlp and curl-impersonate to record Kick streams.
 
-Not everything is explained in this repo so you have to lookup some things yourself.
+Not everything is explained in this repo so you will have to lookup some things yourself. 
+- In this example we install the script in your user home directory **/home/crag/streamlink** and set up a python environment in **/home/crag/streamlink/venv** and for the user **crag**.
+- Replace paths and username accordingly when installing and configuring this for yourself.
+- Paths are configured in the py scripts themselves. TODO: Move this to the settings.config file.
 
 # Install python if you don't have it and create an environment
 ```
@@ -204,3 +207,4 @@ sudo systemctl enable record-roflgator
 
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
 
+I'm not that experienced with linux and how linux services work so my approaches may not be optimal... I am also a newbie to git. Made this repo public so I can share it easier.
