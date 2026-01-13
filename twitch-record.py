@@ -20,7 +20,7 @@ streamer_name = sys.argv[1]
 # ─── 3. Paths ────────────────────────────────────────────────────────────────────
 # Logs now go to /tmp with rotation to limit size
 log_dir      = "/tmp/twitch-record-logs"
-external_dir = "/mnt/DAS/Videos/Twitch"
+external_dir = "/mnt/NAS/Videos/Twitch"
 base_dir     = SCRIPT_DIR
 fallback_dir = os.path.join(base_dir, "twitch")
 config_path  = os.path.join(base_dir, "settings.config")
@@ -108,25 +108,27 @@ def run_streamlink(path: str):
 # ─── 9. Main loop ───────────────────────────────────────────────────────────────
 def record_stream():
     while True:
-        ts       = get_timestamp()
+        ts = get_timestamp()
         filename = f"{streamer_name}-{ts}.mp4"
 
-        # Try external then fallback
-        if use_external:
-            primary = os.path.join(external_dir, filename)
-            logger.info(f"→ External: {primary}")
-            result, _ = run_streamlink(primary)
-            if result.returncode != 0:
-                logger.warning("✗ External failed, switching to fallback")
+        # 1. Determine the best available path BEFORE running streamlink
+        # We check os.path.ismount or os.access to see if the NAS is actually there
+        if os.path.exists(external_dir) and os.access(external_dir, os.W_OK):
+            target_path = os.path.join(external_dir, filename)
+            logger.info(f"→ Primary (NAS): {target_path}")
         else:
-            result = None
+            target_path = os.path.join(fallback_dir, filename)
+            logger.warning(f"→ NAS unavailable, using Fallback: {target_path}")
 
-        if not use_external or (result and result.returncode != 0):
-            fb = os.path.join(fallback_dir, filename)
-            logger.info(f"→ Fallback: {fb}")
-            result, _ = run_streamlink(fb)
-            if result.returncode != 0:
-                logger.error("✗ Fallback failed too")
+        # 2. Run streamlink only ONCE
+        result, _ = run_streamlink(target_path)
+
+        # 3. Handle the result
+        if result.returncode == 0:
+            logger.info("Recording finished successfully.")
+        else:
+            # Streamlink returns 1 if the user is offline
+            logger.info(f"Streamlink exited with code {result.returncode} (likely offline).")
 
         logger.info(f"Sleeping {retry_time}s")
         time.sleep(retry_time)
