@@ -71,7 +71,7 @@ curl_headers  = config.get("Settings", "CurlHeaders", fallback=None)
 ytdlp_args    = config.get("Settings", "YtDlpArgs", fallback="")
 streamlink_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
 
-if not curl_config or not curl_headers:
+if not curl_bin or not curl_headers:
     logger.warning("Curl config or headers not set; cookie refresh may fail.")
 
 stream_url = f"https://www.kick.com/{streamer_name}"
@@ -187,3 +187,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Stopped by user.")
         sys.exit(0)
+
