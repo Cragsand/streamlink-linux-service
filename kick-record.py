@@ -77,14 +77,7 @@ if not curl_bin or not curl_headers:
 stream_url = f"https://www.kick.com/{streamer_name}"
 logger.info(f"Stream URL: {stream_url}")
 
-# ─── 7. Detect external storage availability ───────────────────────────────────
-try:
-    os.makedirs(external_dir, exist_ok=True)
-    logger.info(f"External storage OK: {external_dir}")
-except Exception as e:
-    logger.warning(f"Unable to use external storage, falling back: {e}")
-
-# ─── 8. Helpers ─────────────────────────────────────────────────────────────────
+# ─── 7. Helpers ─────────────────────────────────────────────────────────────────
 def get_timestamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
@@ -127,7 +120,7 @@ def run_ytdlp(path):
     logger.debug(f"Running yt-dlp Fallback: {cmd}")
     return subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-# ─── 9. Main loop ───────────────────────────────────────────────────────────────
+# ─── 8. Main loop ───────────────────────────────────────────────────────────────
 def record_stream():
     while True:
         ts = get_timestamp()
@@ -180,11 +173,12 @@ def record_stream():
         logger.info(f"Sleeping {retry_time}s...")
         time.sleep(retry_time)
 
-# ─── 10. Entry point ─────────────────────────────────────────────────────────────
+# ─── 9. Entry point ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     try:
         record_stream()
     except KeyboardInterrupt:
         logger.info("Stopped by user.")
         sys.exit(0)
+
 
