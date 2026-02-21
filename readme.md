@@ -32,7 +32,12 @@ We use the global linux binaries in order to keep them updated.
 sudo apt update
 sudo apt install ffmpeg curl
 ```
-
+Manually update libraries. Run this if something breaks. Tends to happen every few months. 
+```
+source venv/bin/activate
+pip install yt-dlp -U
+pip install streamlink -U
+```
 # Run manually to record directly
 This example records from twitch.tv/roflgator
 ```
@@ -218,6 +223,7 @@ sudo systemctl enable record-roflgator
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
 
 I'm not that experienced with linux and how linux services work so my approaches may not be optimal... I am also a newbie to git. Made this repo public so I can share it easier.
+
 
 
 
