@@ -27,7 +27,7 @@ Download new environment libraries
 pip install -r requirements.txt
 ```
 # Download and install ffmpeg, streamlink and yt-dlp
-We use the global linux system one to keep it updated
+We use the global linux binaries in order to keep them updated. I used the python environment at first but there was always something else causing problems.
 ```
 sudo apt update
 sudo apt install ffmpeg yt-dlp streamlink
@@ -61,7 +61,7 @@ RetryTimeKick = 120
 ExtraArgs=--twitch-disable-ads
 CurlConfig=/usr/bin/curl  # Ensure this is the correct path to curl
 CurlHeaders=/home/crag/streamlink/config/chrome110.header
-YtDlpArgs=--add-header "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+YtDlpArgs=--impersonate chrome --geo-bypass
 ```
 
 # Linux service config examples
@@ -218,6 +218,7 @@ sudo systemctl enable record-roflgator
 Recording is not triggered because a stream goes live, but is initiated with a timer that checks every 30 seconds for Twitch and every 120 seconds for Kick. This is also adjustable in the settings.config file. This method means that you will likely lose a part of the start of streams but this is usually not an issue as most streamers run a 5 minute intro anyway. Because of bot prevention scripts there is a risk that you may get flagged as a bot when querying too often with Kick. Due to this the script runs a curl impersonation of a browser and downloads cookies. It's not the best future proof solution but it works.
 
 I'm not that experienced with linux and how linux services work so my approaches may not be optimal... I am also a newbie to git. Made this repo public so I can share it easier.
+
 
 
 
