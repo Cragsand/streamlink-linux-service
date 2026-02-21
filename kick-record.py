@@ -11,23 +11,22 @@ from logging.handlers import RotatingFileHandler
 # ─── 1. Compute script directory ───────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# ─── 2. Argument parsing ───────────────────────────────────────────────────────
+# ─── 2. Argument parsing ────────────────────────────────────────────────────────
 if len(sys.argv) < 2:
     print(f"Usage: {sys.argv[0]} <streamer_name>")
     sys.exit(1)
 streamer_name = sys.argv[1]
 
 # ─── 3. Paths ────────────────────────────────────────────────────────────────────
-# Logs now go to /tmp with rotation to limit size
 log_dir      = "/tmp/kick-record-logs"
 external_dir = "/mnt/NAS/Videos/Kick"
 base_dir     = SCRIPT_DIR
-kick_dir     = os.path.join(base_dir, "kick")
+fallback_dir = os.path.join(base_dir, "kick")
 cookies_file = os.path.join(base_dir, "kickcomcookies.txt")
 config_path  = os.path.join(base_dir, "settings.config")
 
 # ─── 4. Ensure directories exist ───────────────────────────────────────────────
-for path in (kick_dir, log_dir):
+for path in (fallback_dir, log_dir):
     try:
         os.makedirs(path, exist_ok=True)
     except Exception as e:
@@ -40,7 +39,7 @@ for path in (kick_dir, log_dir):
 # ─── 5. Logging setup ──────────────────────────────────────────────────────────
 log_file = os.path.join(log_dir, f"kick_{streamer_name}.log")
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG) # Catch everything
 
 # Rotating file handler: max 1MB per file, 3 backups
 try:
@@ -59,17 +58,18 @@ logger.addHandler(ch)
 
 logger.info("=== Starting kick-record ===")
 
-# ─── 6. Read settings.config ───────────────────────────────────────────────────
+# ─── 6. Read settings.config ────────────────────────────────────────────────────
+config = configparser.ConfigParser()
 if not os.path.isfile(config_path):
     logger.error(f"Config not found: {config_path}")
     sys.exit(1)
-config = configparser.ConfigParser()
 config.read(config_path)
 
-retry_time = config.getint("Settings", "RetryTimeKick", fallback=120)
-curl_config = config.get("Settings", "CurlConfig", fallback=None)
-curl_headers = config.get("Settings", "CurlHeaders", fallback=None)
-ytdlp_args = config.get("Settings", "YtDlpArgs", fallback="")
+retry_time    = config.getint("Settings", "RetryTimeKick", fallback=120)
+curl_bin      = config.get("Settings", "CurlConfig", fallback="/usr/bin/curl")
+curl_headers  = config.get("Settings", "CurlHeaders", fallback=None)
+ytdlp_args    = config.get("Settings", "YtDlpArgs", fallback="")
+streamlink_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
 
 if not curl_config or not curl_headers:
     logger.warning("Curl config or headers not set; cookie refresh may fail.")
@@ -78,12 +78,8 @@ stream_url = f"https://www.kick.com/{streamer_name}"
 logger.info(f"Stream URL: {stream_url}")
 
 # ─── 7. Detect external storage availability ───────────────────────────────────
-external_parent = os.path.dirname(external_dir)
-use_external = False
-
 try:
     os.makedirs(external_dir, exist_ok=True)
-    use_external = True
     logger.info(f"External storage OK: {external_dir}")
 except Exception as e:
     logger.warning(f"Unable to use external storage, falling back: {e}")
@@ -92,56 +88,94 @@ except Exception as e:
 def get_timestamp():
     return time.strftime("%Y%m%d-%H%M%S")
 
-def refresh_cookies():
-    logger.info("Refreshing Kick.com cookies...")
-    if os.path.exists(cookies_file):
-        try:
-            os.remove(cookies_file)
-        except Exception:
-            logger.debug("Failed to remove old cookies file; continuing.")
-    cmd = f"curl --config {curl_config} --header @{curl_headers} https://kick.com/ -c {cookies_file}"
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+def refresh_cookies_curl():
+    logger.info("Refreshing cookies via Curl...")
+    if not curl_headers:
+        logger.error("No CurlHeaders defined in settings.config.")
+        return
+    cmd = f"{curl_bin} --header @{curl_headers} https://kick.com/ -c {cookies_file}"
+    logger.debug(f"Executing: {cmd}")
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if result.returncode != 0:
-        stderr = result.stderr.decode('utf-8', errors='replace')
-        logger.error(f"Cookie refresh failed ({result.returncode}): {stderr.strip()}")
+        logger.error(f"Curl Refresh failed (Code {result.returncode}): {result.stderr.strip()}")
 
-# ─── 9. Main recording loop ────────────────────────────────────────────────────
+def refresh_cookies_ytdlp():
+    logger.info("Attempting heavy yt-dlp cookie refresh...")
+    cmd = f"yt-dlp --cookies {cookies_file} --impersonate chrome --cookies-from-browser chrome https://kick.com --preview"
+    logger.debug(f"Executing: {cmd}")
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.debug(f"yt-dlp refresh output: {result.stderr.strip()}")
+
+def run_streamlink(path):
+    """Attempt recording with Streamlink"""
+    cmd = [
+        "streamlink",
+        stream_url,
+        "best",
+        "-o", path,
+        "--http-header", f"User-Agent={streamlink_ua}",
+    ]
+    if os.path.exists(cookies_file):
+        cmd.extend(["--http-cookies", cookies_file])
+    
+    logger.debug(f"Running Streamlink: {' '.join(cmd)}")
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+def run_ytdlp(path):
+    cmd = f"yt-dlp {ytdlp_args} --cookies {cookies_file} {stream_url} -o \"{path}\""
+    logger.debug(f"Running yt-dlp Fallback: {cmd}")
+    return subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+# ─── 9. Main loop ───────────────────────────────────────────────────────────────
 def record_stream():
-    cookie_counter = 0
     while True:
-        cookie_counter += 1
-        if cookie_counter == 1:
-            refresh_cookies()
-            cookie_counter = -2
-
         ts = get_timestamp()
         filename = f"{streamer_name}-{ts}.mp4"
 
-        # 1. DYNAMIC STORAGE CHECK (Do this every loop)
-        # Check if NAS is mounted and writable right now
+        # --- NAS FALLBACK CHECK ---
         if os.path.exists(external_dir) and os.access(external_dir, os.W_OK):
-            out_path = os.path.join(external_dir, filename)
-            logger.info(f"→ Primary (NAS): {out_path}")
+            target_path = os.path.join(external_dir, filename)
+            logger.info(f"→ Primary (NAS): {target_path}")
         else:
-            out_path = os.path.join(kick_dir, filename)
-            logger.warning(f"→ NAS unavailable, using Fallback: {out_path}")
+            target_path = os.path.join(fallback_dir, filename)
+            logger.warning(f"→ NAS OFFLINE! Fallback to: {target_path}")
 
-        # 2. RUN YT-DLP ONLY ONCE
-        cmd = f"yt-dlp {ytdlp_args} --cookies {cookies_file} {stream_url} -o \"{out_path}\""
-        logger.debug(f"Running: {cmd}")
+        # 1. PRIMARY ATTEMPT
+        sl_result = run_streamlink(target_path)
         
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
-        # 3. HANDLE THE RESULT
-        if result.returncode == 0:
+        if sl_result.returncode == 0:
             logger.info("Recording finished successfully.")
         else:
-            # yt-dlp usually returns 1 if the stream is offline
-            stderr = result.stderr.decode('utf-8', errors='replace').strip()
-            if "not live" in stderr.lower() or "offline" in stderr.lower():
-                logger.info("Streamer is currently offline.")
+            sl_err = (sl_result.stdout + sl_result.stderr).lower()
+            logger.debug(f"Streamlink Exit Code: {sl_result.returncode}")
+            
+            # 2. EVALUATE ERROR
+            if "403" in sl_err or "forbidden" in sl_err:
+                logger.warning(f"BLOCKED (403). Full error: {sl_result.stderr.strip()[:200]}")
+                refresh_cookies_curl() 
+                
+                # Try yt-dlp fallback
+                yt_result = run_ytdlp(target_path)
+                if yt_result.returncode == 0:
+                    logger.info("yt-dlp fallback recording successful.")
+                else:
+                    yt_err = yt_result.stderr.lower()
+                    logger.debug(f"yt-dlp Exit Code: {yt_result.returncode}")
+                    
+                    if "403" in yt_err:
+                        logger.error("yt-dlp also blocked. Triggering heavy refresh.")
+                        refresh_cookies_ytdlp()
+                    elif "offline" in yt_err or "not live" in yt_err:
+                        logger.info("Streamer is offline.")
+                    else:
+                        logger.error(f"Fallback failure: {yt_result.stderr.strip()[:200]}")
             else:
-                logger.warning(f"yt-dlp error (Code {result.returncode}): {stderr}")
+                # If it's not a 403, it's usually just 'No streams found' (Offline)
+                logger.info("Streamer appears to be offline.")
+                # Log the first bit of error just in case it's something else
+                if sl_result.stderr:
+                    logger.debug(f"Streamlink info: {sl_result.stderr.strip()[:100]}")
 
         logger.info(f"Sleeping {retry_time}s...")
         time.sleep(retry_time)
