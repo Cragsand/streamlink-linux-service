@@ -6,6 +6,7 @@ import logging
 import configparser
 import subprocess
 import re
+import json
 from logging.handlers import RotatingFileHandler
 
 # ─── 1. Compute script directory ───────────────────────────────────────────────
@@ -18,7 +19,7 @@ if len(sys.argv) < 2:
 streamer_name = sys.argv[1]
 
 # ─── 3. Paths ────────────────────────────────────────────────────────────────────
-# Logs now go to /tmp with rotation to limit size
+# Logs go to /tmp with rotation to limit size
 log_dir      = "/tmp/twitch-record-logs"
 external_dir = "/mnt/NAS/Videos/Twitch"
 base_dir     = SCRIPT_DIR
@@ -66,13 +67,20 @@ config.read(config_path)
 twitch_token = config.get("Settings", "TwitchToken", fallback=None)
 client_id    = config.get("Settings", "ClientID",    fallback=None)
 retry_time   = config.getint("Settings", "RetryTime", fallback=30)
-extra_args   = config.get("Settings", "ExtraArgs",   fallback="--twitch-disable-ads")
+extra_args   = config.get("Settings", "ExtraArgs",   fallback="") or ""
+
+# Parse optional quality-check settings
+target_qualities_raw = config.get("Settings", "RestartStreamIfBetterQualityIsAvailable", fallback="").strip()
+target_qualities     = [q.strip().lower() for q in target_qualities_raw.split(",") if q.strip()] if target_qualities_raw else []
+quality_check_delay  = config.getint("Settings", "RestartStreamIfBetterQualityCheckDelayTime", fallback=60)
 
 if twitch_token and client_id:
     extra_args += (
         f' --twitch-api-header "Authorization=OAuth {twitch_token}"'
         f' --twitch-api-header "Client-ID={client_id}"'
     )
+elif twitch_token:
+    extra_args += f' --twitch-api-header "Authorization=OAuth {twitch_token}"'
 
 stream_url = f"https://www.twitch.tv/{streamer_name}"
 logger.info(f"Stream URL: {stream_url}")
@@ -87,7 +95,6 @@ try:
     logger.info(f"External storage OK: {external_dir}")
 except Exception as e:
     logger.warning(f"Unable to use external storage, falling back: {e}")
-    
 
 # ─── 8. Helpers ─────────────────────────────────────────────────────────────────
 def get_timestamp():
@@ -100,6 +107,32 @@ def hide_token(cmd: str) -> str:
         cmd
     )
 
+def check_target_quality_available():
+    """Queries Streamlink JSON metadata to verify if any target resolution is live."""
+    if not target_qualities:
+        return True, "online"
+
+    cmd = f'streamlink --json {stream_url} {extra_args}'
+    try:
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if res.returncode != 0 or not res.stdout.strip():
+            return False, "offline"
+
+        data = json.loads(res.stdout)
+        streams = data.get("streams", {})
+        if not streams:
+            return False, "offline"
+
+        # Match any quality key against the target qualities list
+        has_target = any(
+            any(q in key.lower() for q in target_qualities)
+            for key in streams.keys()
+        )
+        return has_target, "online"
+    except Exception as e:
+        logger.warning(f"Failed to parse Streamlink JSON metadata: {e}")
+        return False, "error"
+
 def run_streamlink(path: str):
     cmd = f'streamlink {stream_url} best -o "{path}" {extra_args}'
     logger.info("Running: " + hide_token(cmd))
@@ -107,11 +140,49 @@ def run_streamlink(path: str):
 
 # ─── 9. Main loop ───────────────────────────────────────────────────────────────
 def record_stream():
+    waited_for_quality = False
+
     while True:
+        # Check target quality if configured and we haven't already waited once
+        if target_qualities and not waited_for_quality:
+            has_quality, status = check_target_quality_available()
+
+            if status == "offline":
+                logger.info(f"Stream is offline. Sleeping {retry_time}s")
+                waited_for_quality = False
+                time.sleep(retry_time)
+                continue
+            elif status == "error":
+                logger.warning(f"Error checking stream metadata. Sleeping {retry_time}s")
+                time.sleep(retry_time)
+                continue
+
+            if not has_quality:
+                logger.warning(
+                    f"Stream is live, but target quality ({', '.join(target_qualities)}) is unavailable. "
+                    f"Waiting {quality_check_delay}s to re-check before recording anyway..."
+                )
+                time.sleep(quality_check_delay)
+                waited_for_quality = True
+
+                # Re-check once after the delay
+                has_quality_now, status_after_delay = check_target_quality_available()
+                if status_after_delay == "offline":
+                    logger.info(f"Stream went offline during delay. Sleeping {retry_time}s")
+                    waited_for_quality = False
+                    time.sleep(retry_time)
+                    continue
+
+                if has_quality_now:
+                    logger.info("Target quality became available during delay!")
+                else:
+                    logger.warning("Target quality still unavailable after delay. Proceeding to record best available quality.")
+
+        # Determine target output path
         ts = get_timestamp()
         filename = f"{streamer_name}-{ts}.mp4"
 
-        # 1. Determine the best available path BEFORE running streamlink
+        # Determine the best available path BEFORE running streamlink
         # We check os.path.ismount or os.access to see if the NAS is actually there
         if os.path.exists(external_dir) and os.access(external_dir, os.W_OK):
             target_path = os.path.join(external_dir, filename)
@@ -120,15 +191,17 @@ def record_stream():
             target_path = os.path.join(fallback_dir, filename)
             logger.warning(f"→ NAS unavailable, using Fallback: {target_path}")
 
-        # 2. Run streamlink only ONCE
+        # Run streamlink recording
         result, _ = run_streamlink(target_path)
 
-        # 3. Handle the result
+        # Reset flag for the next stream session once recording stops
+        waited_for_quality = False
+
+        # Handle recording completion
         if result.returncode == 0:
             logger.info("Recording finished successfully.")
         else:
-            # Streamlink returns 1 if the user is offline
-            logger.info(f"Streamlink exited with code {result.returncode} (likely offline).")
+            logger.info(f"Streamlink exited with code {result.returncode}. (likely offline)")
 
         logger.info(f"Sleeping {retry_time}s")
         time.sleep(retry_time)
@@ -140,3 +213,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Stopped by user")
         sys.exit(0)
+
