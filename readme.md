@@ -47,9 +47,7 @@ python twitch-record roflgator
 ```
 
 # Configure settings.config and get your token and create a client ID for your "app"
-1. You have to create a client id from https://dev.twitch.tv/console/apps
-
-2. Get your login token from inspecting cookies in your browser on Twitch. Copy this and put it into TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
+1. Get your login token from inspecting cookies in your browser on Twitch. Copy this and put it into TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
 
 On Firefox right click anywhere while on Twitch and select Inspect. Go to the Storage tab, expand Cookies and it should say auth-token. 
 
@@ -57,13 +55,19 @@ This is required and requires an active subscription to the channel you are reco
 
 **Security notice!** Do not ever share your TwitchToken anywhere, it allows anyone who has it to login to your account. Keep in mind that it expires after 30 days unless you keep refreshing it. Resetting your password will also expire it.
 
+2. **Now OPTIONAL:** Create a client id from Twitch developer console here: https://dev.twitch.tv/console/apps
+
+This used to be mandatory to be served proper streams but is no longer needed. On the contrary, using an old client ID may prevent you being served 1080p60fps or 1440p60fps streams. Leave this blank as a default, if you still have issues create one.
+
+3. **NOTICE:** ``--twitch-disable-ads`` has been deprecated in streamlink. Ad segments are always edited out now.
+
 ```
 [Settings]
 TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
-ClientID=CREATE_YOUR_CLIENT_ID_FROM_TWITCH_DEVELOPER_CONSOLE
+ClientID=OPTIONAL_CLIENT_ID_FROM_TWITCH_DEVELOPER_CONSOLE
 RetryTime=30
 RetryTimeKick = 120
-ExtraArgs=--twitch-disable-ads
+ExtraArgs=
 CurlConfig=/usr/bin/curl  # Ensure this is the correct path to curl
 CurlHeaders=/home/crag/streamlink/config/chrome110.header
 YtDlpArgs=--impersonate chrome --geo-bypass
