@@ -61,6 +61,8 @@ This used to be mandatory to be served proper streams but is no longer needed. O
 
 3. **NOTICE:** ``--twitch-disable-ads`` has been deprecated in streamlink. Ad segments are always edited out now.
 
+4. **OPTIONAL:** If the stream being served is not of higher quality 1080p,1440p,2160p then retry recording again after 30 seconds. Added this option since Twitch started serving only 720p the first 30 seconds of streams for some reason.
+
 ```
 [Settings]
 TwitchToken=GET_YOUR_TOKEN_FROM_TWITCH_IN_BROWSER
@@ -71,6 +73,8 @@ ExtraArgs=
 CurlConfig=/usr/bin/curl  # Ensure this is the correct path to curl
 CurlHeaders=/home/crag/streamlink/config/chrome110.header
 YtDlpArgs=--impersonate chrome --geo-bypass
+RestartStreamIfBetterQualityIsAvailable = 1080p,1440p,2160p
+RestartStreamIfBetterQualityCheckDelayTime = 30
 ```
 
 # Linux service config examples
